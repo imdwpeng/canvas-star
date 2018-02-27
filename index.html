@@ -2,15 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title></title>
-    <link rel="stylesheet" href="index.css">
+    <title>Title</title>
+    <style>
+        .bg-night {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .bg-night img {
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+    </style>
 </head>
 <body>
-<div class="J_canvas"></div>
+<canvas id="canvas"></canvas>
+<div class="bg-night">
+    <img src="1.png">
+</div>
 </body>
-
-<script src="http://ruhnnstatic.oss-cn-hangzhou.aliyuncs.com/plugin-jquery/jquery.min.js"></script>
-<script src="http://ruhnnstatic.oss-cn-hangzhou.aliyuncs.com/plugin/plugin-plugin/plugin.js"></script>
-<script src="index.js"></script>
+<script src="main.js"></script>
 
 </html>

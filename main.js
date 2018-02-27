@@ -1,21 +1,8 @@
 /**
- * Created by Eric on 17/11/7.
+ * Created by Eric on 2018/2/26.
  */
 
-
-var iWidth = document.body.offsetWidth,
-    iHeight = document.body.offsetHeight;
-
-/*动态生成canvas*/
-var myCanvas = document.createElement("canvas");
-myCanvas.setAttribute("width", iWidth);
-myCanvas.setAttribute("height", iHeight);
-myCanvas.setAttribute("id", "canvas");
-document.getElementById('J_canvas').appendChild(myCanvas);
-
-var canvas = document.getElementById('canvas'),
-    context = canvas.getContext('2d');
-
+// 月亮
 class Moon {
     constructor(ctx, width, height) {
         this.ctx = ctx;
@@ -39,7 +26,7 @@ class Moon {
         gradient.addColorStop(0.01, 'rgb(70,70,80)');
         gradient.addColorStop(0.2, 'rgb(40,40,50)');
         gradient.addColorStop(0.4, 'rgb(20,20,30)');
-        gradient.addColorStop(1, 'rgb(0,0,10)');
+        gradient.addColorStop(1, '#080d23');
 
         ctx.save();
         ctx.fillStyle = gradient;
@@ -60,12 +47,12 @@ class Moon {
     }
 }
 
+// 星星
 class Stars {
     constructor(ctx, width, height, amount) {
         this.ctx = ctx;
         this.width = width;
         this.height = height;
-        this.amount = amount;
         this.stars = this.getStars(amount);
     }
 
@@ -75,115 +62,129 @@ class Stars {
             stars.push({
                 x: Math.random() * this.width,
                 y: Math.random() * this.height,
-                r: Math.random() * 2,
-                ra: Math.random() * 0.05,
-                alpha: Math.random(),
-                vx: Math.random() * 0.2 - 0.1,
-                vy: Math.random() * 0.2 - 0.1
+                r: Math.random() + 0.5
             })
         }
-        return stars;
+        return stars
     }
 
     draw() {
-        let {ctx} = this;
+        let ctx = this.ctx;
         ctx.save();
         ctx.fillStyle = 'white';
         this.stars.forEach(star => {
             ctx.beginPath();
-            ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.closePath();
+            ctx.arc(star.x, star.y, star.r, 0, 2 * Math.PI);
+            ctx.fill()
         });
-        ctx.restore();
+        ctx.restore()
     }
 
-    //闪烁
+    //闪烁，星星半径每隔10帧随机变大或变小
     blink() {
         this.stars = this.stars.map(star => {
             let sign = Math.random() > 0.5 ? 1 : -1;
             star.r += sign * 0.2;
             if (star.r < 0) {
-                star.r = -star.r;
-            } else if (star.r > 2) {
-                star.r -= 0.2;
+                star.r = -star.r
+            } else if (star.r > 1) {
+                star.r -= 0.2
             }
-            return star;
-        });
+            return star
+        })
+
     }
 }
 
-class MeteorFlare {
-    constructor(ctx, width, height, amount) {
+// 流星
+class Meteor {
+    constructor(ctx, x, h) {
         this.ctx = ctx;
-        this.width = width;
-        this.height = height;
-        this.meteors = this.getMeteor(amount);
+        this.x = x;
+        this.y = 0;
+        this.h = h;
+        this.vx = -(5 + Math.random() * 5);
+        this.vy = -this.vx;
+        this.len = Math.random() * 300 + 100;
     }
 
-    getMeteor(amount) {
-        let meteors = [];
-        while (amount--) {
-            meteors.push({
-                x: Math.random() * this.width,
-                y: Math.random() * this.height,
-                r: Math.random() * 2,
-                ra: Math.random() * 0.05,
-                alpha: Math.random(),
-                vx: Math.random() * 0.2 - 0.1,
-                vy: Math.random() * 0.2 - 0.1
-            })
+    flow() {
+        //判定流星出界
+        if (this.x < -this.len || this.y > this.h + this.len) {
+            return false
         }
-        return meteors;
-
+        this.x += this.vx;
+        this.y += this.vy;
+        return true
     }
 
     draw() {
-        let ctx = this.ctx;
-
-        this.meteors.forEach((meteor) => {
-            console.log(meteor)
+        let ctx = this.ctx,
             //径向渐变，从流星头尾圆心，半径越大，透明度越高
-            let gra = ctx.createRadialGradient(meteor.x, meteor.y, 0, meteor.x, meteor.y, meteor.r);
+            gra = ctx.createRadialGradient(
+                this.x, this.y, 0, this.x, this.y, this.len);
 
-            gra.addColorStop(0, 'rgba(255,255,255,1)');
-            gra.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.save();
-            ctx.fillStyle = gra;
-            ctx.beginPath();
-            //流星头，二分之一圆
-            ctx.arc(meteor.x, meteor.y, 1, Math.PI / 4, 5 * Math.PI / 4);
-            //绘制流星尾，三角形
-            ctx.lineTo(meteor.x + meteor.r, meteor.y - meteor.r);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-        });
-
+        const PI = Math.PI;
+        gra.addColorStop(0, 'rgba(255,255,255,1)');
+        gra.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.save();
+        ctx.fillStyle = gra;
+        ctx.beginPath();
+        //流星头，二分之一圆
+        ctx.arc(this.x, this.y, .5, PI / 4, 5 * PI / 4);
+        //绘制流星尾，三角形
+        ctx.lineTo(this.x + this.len, this.y - this.len);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
     }
 }
 
-let moon = new Moon(context, iWidth, iHeight);
-let stars = new Stars(context, iWidth, iHeight, 200);
-let meteors = new MeteorFlare(context, iWidth, iHeight, 2);
+//流星生成函数
+const meteorGenerator = () => {
+    //x位置偏移，以免经过月亮
+    let x = Math.random() * width;
+    meteors.push(new Meteor(ctx, x, height));
+};
 
 //每一帧动画生成函数
-let count = 0;
 const frame = () => {
-
+    //每隔10帧星星闪烁一次，节省计算资源
     count++;
-    //每隔10帧星星闪烁一次
     count % 10 == 0 && stars.blink();
-    //每隔100帧出现一个流星
-    count % 100 == 0 && meteors.draw();
+    count % 300 == 0 && meteorGenerator();
 
-    //月亮移动
     moon.move();
     moon.draw();
     stars.draw();
 
+    meteors.forEach((meteor, index, arr) => {
+        //如果流星离开视野之内，销毁流星实例，回收内存
+        if (meteor.flow()
+        ) {
+            meteor.draw()
+        }
+        else {
+            arr.splice(index, 1)
+        }
+    });
+
     requestAnimationFrame(frame);
 };
 
+let width = window.innerWidth,
+    height = window.innerHeight,
+    canvas = document.getElementById("canvas"),
+    ctx = canvas.getContext('2d'),
+    //实例化月亮和星星。流星是随机时间生成，所以只初始化数组
+    moon = new Moon(ctx, width, height),
+    stars = new Stars(ctx, width, height, 200),
+    meteors = [],
+    count = 0;
+
+canvas.width = width;
+canvas.height = height;
+
 frame();
+
 
