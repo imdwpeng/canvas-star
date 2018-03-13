@@ -36,7 +36,7 @@ class Moon {
 
     move() {
         let {circle_x, circle_y, circle_r, angle, startAngle, endAngle,} = this;
-        this.angle = angle - 0.001;
+        this.angle = angle - 0.0001;
 
         if (this.angle <= endAngle) {
             this.angle = startAngle;
@@ -152,7 +152,7 @@ const frame = () => {
     //每隔10帧星星闪烁一次，节省计算资源
     count++;
     count % 10 == 0 && stars.blink();
-    count % 50 == 0 && meteorGenerator();
+    count % 300 == 0 && meteorGenerator();
 
     moon.move();
     moon.draw();
